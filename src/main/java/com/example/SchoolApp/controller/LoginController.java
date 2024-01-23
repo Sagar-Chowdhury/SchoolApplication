@@ -14,6 +14,8 @@ public class LoginController {
     @RequestMapping(value = "/login" , method = {RequestMethod.GET,RequestMethod.POST})
     public String displayLoginPage(@RequestParam(value="error", required = false) String error,@RequestParam(value="logout", required = false) String logout, Model model){
 
+        log.error("Error message -"+error);
+        log.info("logout done -"+logout);
         String errorMessage = null;
         if(error!=null)
         {
