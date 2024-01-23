@@ -20,7 +20,7 @@ public class ProjectSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/dashboard").authenticated()
-                        .requestMatchers("/home").permitAll()
+                        .requestMatchers("/","/home").permitAll()
                         .requestMatchers("/holidays/**").permitAll()
                         .requestMatchers("/contact").permitAll()
                         .requestMatchers("/saveMsg").permitAll()
