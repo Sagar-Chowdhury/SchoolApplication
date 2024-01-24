@@ -17,23 +17,24 @@ public class ProjectSecurityConfig {
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/dashboard").authenticated()
-                        .requestMatchers("/","/home").permitAll()
+        http.csrf((csrf) -> csrf.ignoringRequestMatchers("/saveMsg"))    //Public post method needs no security as such.
+                .authorizeHttpRequests((authorize) -> authorize                  //CSRF is not relevant for GET requests eg:-
+                        .requestMatchers("/dashboard").authenticated()   // pages like "/courses" ,"/holidays"
+                        .requestMatchers("/", "/home").permitAll()
                         .requestMatchers("/holidays/**").permitAll()
                         .requestMatchers("/contact").permitAll()
                         .requestMatchers("/saveMsg").permitAll()
                         .requestMatchers("/courses").permitAll()
                         .requestMatchers("/assets/**").permitAll()
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/logout").permitAll()
                         .anyRequest().authenticated())
                 .formLogin((formLogin) -> formLogin
                         .loginPage("/login")
                         .defaultSuccessUrl("/dashboard")
                         .failureUrl("/login?error=true").permitAll()
 
-                )
+                ) //will not play a part , as custom logic in Login Controller will take priority.
                 .logout((logout) -> logout
                         .logoutSuccessUrl("/login?logout=true").permitAll()
                         .invalidateHttpSession(true).permitAll());
