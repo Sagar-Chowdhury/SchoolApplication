@@ -1,13 +1,18 @@
 package com.example.SchoolApp.config;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -16,30 +21,39 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class ProjectSecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf((csrf) -> csrf.ignoringRequestMatchers("/saveMsg"))    //Public post method needs no security as such.
-                .authorizeHttpRequests((authorize) -> authorize                  //CSRF is not relevant for GET requests eg:-
-                        .requestMatchers("/dashboard").authenticated()   // pages like "/courses" ,"/holidays"
-                        .requestMatchers("/", "/home").permitAll()
-                        .requestMatchers("/holidays/**").permitAll()
-                        .requestMatchers("/contact").permitAll()
-                        .requestMatchers("/saveMsg").permitAll()
-                        .requestMatchers("/courses").permitAll()
-                        .requestMatchers("/assets/**").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/logout").permitAll()
-                        .anyRequest().authenticated())
-                .formLogin((formLogin) -> formLogin
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard")
-                        .failureUrl("/login?error=true").permitAll()
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
+        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector);
 
-                ) //will not play a part , as custom logic in Login Controller will take priority.
-                .logout((logout) -> logout
-                        .logoutSuccessUrl("/login?logout=true").permitAll()
-                        .invalidateHttpSession(true).permitAll());
+        http.csrf((csrf) -> csrf.ignoringRequestMatchers(mvcMatcherBuilder.pattern("/saveMsg"))
+                        .ignoringRequestMatchers(PathRequest.toH2Console()))
+                .authorizeHttpRequests((requests) -> requests.requestMatchers(mvcMatcherBuilder.pattern("/dashboard")).authenticated()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/displayMessages")).hasRole("ADMIN")
+                        .requestMatchers(mvcMatcherBuilder.pattern("/closeMsg/**")).hasRole("ADMIN")
+                        .requestMatchers(mvcMatcherBuilder.pattern("")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/home")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/holidays/**")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/contact")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/saveMsg")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/courses")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/about")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/assets/**")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/login")).permitAll()
+                        .requestMatchers(mvcMatcherBuilder.pattern("/logout")).permitAll()
+                        .requestMatchers(PathRequest.toH2Console()).permitAll())
+                .formLogin(loginConfigurer -> loginConfigurer.loginPage("/login")
+                        .defaultSuccessUrl("/dashboard").failureUrl("/login?error=true").permitAll())
+                .logout(logoutConfigurer -> logoutConfigurer.logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true).permitAll())
+               ;
+
+        http.headers(headersConfigurer -> headersConfigurer
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+
         return http.build();
+
     }
+
 
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
