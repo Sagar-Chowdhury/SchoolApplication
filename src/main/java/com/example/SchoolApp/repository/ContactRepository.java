@@ -1,6 +1,7 @@
 package com.example.SchoolApp.repository;
 
 import com.example.SchoolApp.model.Contact;
+import com.example.SchoolApp.rowmappers.ContactRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -22,7 +23,10 @@ public class ContactRepository {
                 contact.getStatus(), contact.getCreatedAt(), contact.getCreatedBy());
     }
 
-//    public List<Contact> findMsgsWithStatus(String status){
-//        String sql
-//    }
+    public List<Contact> findMsgsWithStatus(String status){
+        String sql = "SELECT * FROM CONTACT_MSG WHERE STATUS = ?";
+        return jdbcTemplate.query(sql,preparedStatement -> preparedStatement.setString(1, status),new ContactRowMapper());
+    }
+
+
 }
