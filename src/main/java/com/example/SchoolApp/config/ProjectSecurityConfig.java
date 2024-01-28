@@ -23,7 +23,6 @@ public class ProjectSecurityConfig {
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
         MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector);
-
         http.csrf((csrf) -> csrf.ignoringRequestMatchers(mvcMatcherBuilder.pattern("/saveMsg"))
                         .ignoringRequestMatchers(PathRequest.toH2Console()))
                 .authorizeHttpRequests((requests) -> requests.requestMatchers(mvcMatcherBuilder.pattern("/dashboard")).authenticated()
@@ -44,17 +43,12 @@ public class ProjectSecurityConfig {
                 .formLogin(loginConfigurer -> loginConfigurer.loginPage("/login")
                         .defaultSuccessUrl("/dashboard").failureUrl("/login?error=true").permitAll())
                 .logout(logoutConfigurer -> logoutConfigurer.logoutSuccessUrl("/login?logout=true")
-                        .invalidateHttpSession(true).permitAll())
-               ;
-
+                        .invalidateHttpSession(true).permitAll());
         http.headers(headersConfigurer -> headersConfigurer
                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
         return http.build();
-
     }
-
-
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
 
